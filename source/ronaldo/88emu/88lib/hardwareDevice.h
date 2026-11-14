@@ -104,6 +104,9 @@ namespace emu88Lib
 		// The SC-8850's VALUE encoder, or the MT-32's VOLUME/VALUE knob, which a detent turns
 		// by a 32nd of its travel.
 		void turnPanelEncoder(int32_t _detents);
+		// The MT-32's VOLUME/VALUE knob set to a position, 0 to LaBoard::KnobMaximum, as a hand that knows where
+		// it wants it; other boards ignore it.
+		void setPanelKnob(uint16_t _position);
 		DisplaySnapshot displaySnapshot() const;
 		// The MV-30's part settings and timbre names, see Mv30Parts; invalid on any other board. The revision moves
 		// when they change.
@@ -128,7 +131,7 @@ namespace emu88Lib
 		              std::vector<synthLib::SMidiEvent>&) override;
 
 	private:
-		enum class PanelCommandType : uint8_t { Buttons, Encoder, Mv30Panel };
+		enum class PanelCommandType : uint8_t { Buttons, Encoder, Mv30Panel, Knob };
 		struct PanelCommand
 		{
 			PanelCommandType type = PanelCommandType::Buttons;

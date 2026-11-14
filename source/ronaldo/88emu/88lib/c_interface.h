@@ -217,6 +217,9 @@ EMU88_EXPORT emu88_return_code emu88_set_panel_buttons(emu88_context context, ui
 /* Turns the SC-8850's VALUE encoder by detents, or the MT-32's VOLUME/VALUE knob by 32nds of its
  * travel; negative is anticlockwise. */
 EMU88_EXPORT emu88_return_code emu88_turn_panel_encoder(emu88_context context, int detents);
+/* Sets the MT-32's VOLUME/VALUE knob to a position, 0 (fully anticlockwise) to 1023 (fully
+ * clockwise), where its A/D converter reads it. Other boards ignore it. */
+EMU88_EXPORT emu88_return_code emu88_set_panel_knob(emu88_context context, uint16_t position);
 /* The front-panel lamps, a bit per lamp in the board's numbering; bit 0 is MIDI MESSAGE on the
  * MT-32 and CM boards. 0 while closed. */
 EMU88_EXPORT uint32_t emu88_get_panel_leds(emu88_context context);

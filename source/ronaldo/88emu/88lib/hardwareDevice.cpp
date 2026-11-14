@@ -358,6 +358,12 @@ namespace emu88Lib
 		m_pendingPanelCommands.push_back({PanelCommandType::Encoder, _detents});
 	}
 
+	void HardwareDevice::setPanelKnob(const uint16_t _position)
+	{
+		std::lock_guard lock(m_panelMutex);
+		m_pendingPanelCommands.push_back({PanelCommandType::Knob, static_cast<int32_t>(_position)});
+	}
+
 	HardwareDevice::DisplaySnapshot HardwareDevice::displaySnapshot() const
 	{
 		std::lock_guard lock(m_displayMutex);
@@ -516,6 +522,11 @@ namespace emu88Lib
 			else if(m_la) m_la->setButtons(buttons);
 			else if(m_cm64) m_cm64->setButtons(buttons);
 			m_nextPanelCommandSample = m_renderedSamples + g_minimumPanelEdgeSamples;
+		}
+		else if(command.type == PanelCommandType::Knob)
+		{
+			if(m_la && hasPanelKnob(m_model))
+				m_la->setKnob(static_cast<uint16_t>(std::clamp<int32_t>(command.value, 0, LaBoard::KnobMaximum)));
 		}
 		else if(command.type == PanelCommandType::Mv30Panel)
 		{

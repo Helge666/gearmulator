@@ -478,6 +478,16 @@ emu88_return_code emu88_turn_panel_encoder(const emu88_context _context, const i
 	return EMU88_RC_OK;
 }
 
+emu88_return_code emu88_set_panel_knob(const emu88_context _context, const uint16_t _position)
+{
+	if(!_context)
+		return EMU88_RC_INVALID_ARGUMENT;
+	if(!_context->device)
+		return EMU88_RC_NOT_OPENED;
+	_context->device->setPanelKnob(_position);
+	return EMU88_RC_OK;
+}
+
 uint32_t emu88_get_panel_leds(const emu88_context _context)
 {
 	if(!_context || !_context->device)
