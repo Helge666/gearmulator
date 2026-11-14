@@ -45,6 +45,34 @@ struct emu88_data
 	// Played since the last frame was rendered; goes to the device with the next one.
 	std::vector<synthLib::SMidiEvent> midiIn;
 	std::vector<synthLib::SMidiEvent> midiOut;
+	// What the device sent, as wire bytes, until emu88_read_midi_out() takes it; at most
+	// MidiOutLimit bytes, the rest is dropped.
+	static constexpr size_t MidiOutLimit = 65536;
+	std::vector<uint8_t> midiOutBytes;
+
+	emu88_data() { midiOutBytes.reserve(MidiOutLimit); }
+
+	void keepMidiOut()
+	{
+		for(const auto& e : midiOut)
+		{
+			if(!e.sysex.empty())
+			{
+				if(midiOutBytes.size() + e.sysex.size() <= MidiOutLimit)
+					midiOutBytes.insert(midiOutBytes.end(), e.sysex.begin(), e.sysex.end());
+				continue;
+			}
+			if(e.a < 0x80 || e.type != synthLib::MidiEventType::Midi)
+				continue;
+			const uint8_t s = e.a;
+			const size_t n = s >= 0xf8 || s == 0xf6 ? 1 : (s & 0xe0) == 0xc0 || s == 0xf1 || s == 0xf3 ? 2 : 3;
+			if(midiOutBytes.size() + n > MidiOutLimit)
+				continue;
+			const uint8_t bytes[3] = {e.a, e.b, e.c};
+			midiOutBytes.insert(midiOutBytes.end(), bytes, bytes + n);
+		}
+		midiOut.clear();
+	}
 
 	std::unique_ptr<synthLib::Resampler> resampler;
 	std::vector<float> left, right;
@@ -64,6 +92,7 @@ struct emu88_data
 		const synthLib::TAudioInputs inputs{};
 		device->process(inputs, _outputs, _frames, midiIn, midiOut);
 		midiIn.clear();
+		keepMidiOut();
 	}
 
 	void updateResampler()
@@ -414,6 +443,17 @@ emu88_return_code emu88_play_silence(const emu88_context _context)
 					return rc;
 			}
 	return EMU88_RC_OK;
+}
+
+size_t emu88_read_midi_out(const emu88_context _context, uint8_t* _buffer, const size_t _bufferSize)
+{
+	if(!_context || !_buffer || !_bufferSize)
+		return 0;
+	auto& out = _context->midiOutBytes;
+	const size_t n = std::min(out.size(), _bufferSize);
+	std::memcpy(_buffer, out.data(), n);
+	out.erase(out.begin(), out.begin() + static_cast<std::ptrdiff_t>(n));
+	return n;
 }
 
 // ---- front panel

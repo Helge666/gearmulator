@@ -202,6 +202,10 @@ EMU88_EXPORT emu88_return_code emu88_play_device_reset(emu88_context context);
  * or hold pedal up and All Notes Off on the MT-32 and CM boards, whose firmware predates All Sound
  * Off. Sent to every channel of every input. */
 EMU88_EXPORT emu88_return_code emu88_play_silence(emu88_context context);
+/* What the device sent at its MIDI OUT since the last call (answers to data requests, for one),
+ * as wire bytes: copies at most buffer_size bytes and returns how many; the rest stays for the
+ * next call. Up to 64 KB are kept between calls, anything beyond is dropped. */
+EMU88_EXPORT size_t emu88_read_midi_out(emu88_context context, uint8_t* buffer, size_t buffer_size);
 
 /* == Front panel ==
  * The panel is read by the firmware at its own pace; a press has to last long enough to be seen,
